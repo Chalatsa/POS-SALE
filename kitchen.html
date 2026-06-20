@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ระบบหลังเตาอัจฉริยะ - ร้านโตเกียว</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans p-6">
+
+  <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-6">
+    <h1 class="text-2xl font-black text-amber-400">🔥 ระบบจัดการหลังร้านแบบ Real-time</h1>
+    <span class="bg-green-500 text-xs px-3 py-1 rounded-full font-bold animate-pulse">ระบบเชื่อมต่อ Firebase เสถียร</span>
+  </div>
+
+  <div class="flex gap-4 mb-6">
+    <button onclick="switchTab('queue')" id="btn-tab-queue" class="bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-all shadow-md">📋 จัดการคิวอาหาร</button>
+    <button onclick="switchTab('menu')" id="btn-tab-menu" class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">⚙️ แผงควบคุม Admin & เพิ่มเมนู</button>
+  </div>
+
+  <div id="tab-queue-content" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <div class="bg-slate-800 p-4 rounded-2xl border border-red-500/30">
+      <h2 class="text-red-400 font-bold mb-3 flex justify-between items-center"><span>🔴 รอคิว (มาก่อนทำก่อน)</span></h2>
+      <div id="queue-pending" class="space-y-3"></div>
+    </div>
+
+    <div class="bg-slate-800 p-4 rounded-2xl border border-blue-500/30">
+      <h2 class="text-blue-400 font-bold mb-3">🔵 กำลังปรุง...</h2>
+      <div id="queue-cooking" class="space-y-3"></div>
+    </div>
+
+    <div class="bg-slate-800 p-4 rounded-2xl border border-green-500/30">
+      <h2 class="text-green-400 font-bold mb-3">🟢 ทำเสร็จแล้ว (รอส่งมอบให้ลูกค้า)</h2>
+      <div id="queue-ready" class="space-y-3"></div>
+    </div>
+
+  </div>
+
+  <div id="tab-menu-content" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4 h-fit">
+      <h2 class="text-xl font-bold text-amber-400">➕ เพิ่มเมนูใหม่ของร้าน</h2>
+      <div class="space-y-3 text-slate-900">
+        <div>
+          <label class="text-xs font-semibold text-gray-400">ชื่อเมนูอาหาร/ไส้โตเกียว</label>
+          <input type="text" id="new-menu-name" placeholder="เช่น โตเกียวไส้ครีม" class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-gray-400">ราคาขาย (บาท)</label>
+            <input type="number" id="new-menu-price" placeholder="10" class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-400">ต้นทุนวัตถุดิบ (บาท)</label>
+            <input type="number" id="new-menu-cost" placeholder="4" class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-400">ลิงก์รูปภาพเมนูจากเว็บ/Google Drive (URL)</label>
+          <input type="text" id="new-menu-image" placeholder="วางลิงก์รูปภาพของคุณ..." class="w-full p-2.5 rounded-xl mt-1 focus:outline-none text-xs">
+        </div>
+        <button onclick="addNewMenu()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
+          💾 บันทึกและเปิดขายทันที
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 md:col-span-2">
+      <h2 class="text-xl font-bold text-gray-300 mb-4">📋 รายการเมนูปัจจุบันทั้งหมดภายในแอป</h2>
+      <div id="admin-menu-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <p class="text-gray-500 text-sm">กำลังโหลดข้อมูลรายการเมนูของร้าน...</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // รวม Firebase Config ของคุณเรียบร้อยแล้ว
+    const firebaseConfig = {
+      apiKey: "AIzaSyC-slki_yhAJuHbizE4q1CDUz9rV4vHeL4",
+      authDomain: "pos-sale-9c1d6.firebaseapp.com",
+      projectId: "pos-sale-9c1d6",
+      storageBucket: "pos-sale-9c1d6.firebasestorage.app",
+      messagingSenderId: "55694019495",
+      appId: "1:55694019495:web:6b7e4612f30bf1ad4e4482",
+      measurementId: "G-ZCLCDJQ2F1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ระบบแจ้งเตือนเสียงปิ๊งเมื่อมีลูกค้าสั่งเข้ามาใหม่
+    function playBeep() {
+      try {
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = context.createOscillator();
+        osc.type = "sine"; osc.frequency.setValueAtTime(850, context.currentTime);
+        osc.connect(context.destination); osc.start(); osc.stop(context.currentTime + 0.18);
+      } catch(e) { console.log("ติดขัดเรื่องสิทธิ์การเล่นเสียงบนบราวเซอร์"); }
+    }
+
+    // --- ส่วนงานจัดการคิวอาหาร ---
+    db.collection("orders").orderBy("timestamp", "asc").onSnapshot((snapshot) => {
+      document.getElementById("queue-pending").innerHTML = "";
+      document.getElementById("queue-cooking").innerHTML = "";
+      document.getElementById("queue-ready").innerHTML = "";
+
+      let hasNewOrder = false;
+      snapshot.docChanges().forEach(change => { 
+        if(change.type === "added" && !snapshot.metadata.hasPendingWrites) hasNewOrder = true; 
+      });
+      if(hasNewOrder) playBeep(); 
+
+      snapshot.forEach((doc) => {
+        const order = doc.data();
+        if (order.status === "เสร็จสิ้น") return;
+
+        const itemsText = order.items.map(i => `<li class="font-bold text-lg text-amber-300">• ${i.name} <span class="text-white bg-slate-900 px-1.5 py-0.5 rounded text-sm ml-1">x ${i.qty}</span></li>`).join('');
+        
+        const cardHtml = `
+          <div class="bg-slate-700 p-4 rounded-xl shadow space-y-2 border border-slate-600">
+            <div class="flex justify-between items-center">
+              <span class="text-xl font-black bg-slate-900 px-3 py-1 rounded text-amber-400">คิว #${order.queueNo}</span>
+              <span class="text-xs text-gray-300 bg-slate-800 px-2 py-1 rounded">${order.tableNum}</span>
+            </div>
+            <ul class="space-y-1">${itemsText}</ul>
+            ${order.note ? `<p class="text-xs bg-red-950/40 text-red-300 p-1.5 rounded border border-red-900/30">💬 หมายเหตุ: ${order.note}</p>` : ''}
+            <div class="pt-2 flex gap-2">
+              ${getActionButtons(doc.id, order.status)}
+            </div>
+          </div>
+        `;
+
+        if(order.status === "รอทำ") document.getElementById("queue-pending").innerHTML += cardHtml;
+        if(order.status === "กำลังทำ") document.getElementById("queue-cooking").innerHTML += cardHtml;
+        if(order.status === "เสร็จแล้ว") document.getElementById("queue-ready").innerHTML += cardHtml;
+      });
+    });
+
+    function getActionButtons(id, status) {
+      if(status === "รอทำ") return `<button onclick="updateStatus('${id}', 'กำลังทำ')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold text-sm transition-all shadow">🍳 เริ่มทำอาหาร</button>`;
+      if(status === "กำลังทำ") return `<button onclick="updateStatus('${id}', 'เสร็จแล้ว')" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded font-bold text-sm transition-all shadow">🥞 ทำเสร็จแล้ว</button>`;
+      if(status === "เสร็จแล้ว") return `<button onclick="updateStatus('${id}', 'เสร็จสิ้น')" class="w-full bg-slate-500 hover:bg-slate-600 py-2 rounded font-bold text-sm transition-all">✅ ลูกค้ารับของแล้ว</button>`;
+      return '';
+    }
+
+    function updateStatus(id, newStatus) {
+      db.collection("orders").doc(id).update({ status: newStatus });
+    }
+
+    // --- ส่วนงานจัดการเมนูร้านอาหาร (Admin) ---
+    function switchTab(tab) {
+      const queueSection = document.getElementById('tab-queue-content');
+      const menuSection = document.getElementById('tab-menu-content');
+      const btnQueue = document.getElementById('btn-tab-queue');
+      const btnMenu = document.getElementById('btn-tab-menu');
+
+      if(tab === 'menu') {
+        queueSection.classList.add('hidden');
+        menuSection.classList.remove('hidden');
+        btnMenu.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
+        btnQueue.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
+      } else {
+        queueSection.classList.remove('hidden');
+        menuSection.classList.add('hidden');
+        btnQueue.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
+        btnMenu.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
+      }
+    }
+
+    function addNewMenu() {
+      const name = document.getElementById('new-menu-name').value;
+      const price = parseFloat(document.getElementById('new-menu-price').value);
+      const cost = parseFloat(document.getElementById('new-menu-cost').value);
+      const imageUrl = document.getElementById('new-menu-image').value || "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500"; 
+
+      if(!name || !price) return alert("กรุณากรอกข้อมูล ชื่อเมนู และ ราคาขาย ให้เรียบร้อยครับ");
+
+      db.collection("menus").add({
+        name: name,
+        price: price,
+        cost: cost || 0,
+        image: imageUrl,
+        status: "available"
+      }).then(() => {
+        alert("เพิ่มเมนูลงในฐานข้อมูลระบบสำเร็จ!");
+        document.getElementById('new-menu-name').value = "";
+        document.getElementById('new-menu-price').value = "";
+        document.getElementById('new-menu-cost').value = "";
+        document.getElementById('new-menu-image').value = "";
+      });
+    }
+
+    db.collection("menus").onSnapshot((snapshot) => {
+      const adminMenuList = document.getElementById('admin-menu-list');
+      adminMenuList.innerHTML = "";
+      
+      if(snapshot.empty) {
+        adminMenuList.innerHTML = `<p class="text-gray-500 text-sm">ยังไม่มีเมนูใด ๆ บันทึกไว้ในแผงควบคุม</p>`;
+        return;
+      }
+
+      snapshot.forEach((doc) => {
+        const item = doc.data();
+        adminMenuList.innerHTML += `
+          <div class="bg-slate-750 p-3 rounded-xl border border-slate-700 flex gap-3 items-center bg-slate-800/60">
+            <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg bg-slate-600 flex-shrink-0">
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-white truncate">${item.name}</h4>
+              <p class="text-xs text-gray-400">ขาย: ฿${item.price} | ทุน: ฿${item.cost} (กำไร ฿${item.price - item.cost})</p>
+              <p class="text-xs ${item.status === 'available' ? 'text-green-400' : 'text-red-400'} font-semibold mt-1">
+                ● ${item.status === 'available' ? 'กำลังแสดงบนหน้าร้าน' : 'ของหมดชั่วคราว'}
+              </p>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <button onclick="toggleMenuStatus('${doc.id}', '${item.status}')" class="text-xs bg-slate-600 hover:bg-slate-500 px-2.5 py-1 rounded text-white font-medium transition-all">
+                ${item.status === 'available' ? 'ปิดขาย' : 'เปิดขาย'}
+              </button>
+              <button onclick="deleteMenu('${doc.id}')" class="text-xs bg-red-900/40 hover:bg-red-900/80 px-2.5 py-1 rounded text-red-300 font-medium transition-all">ลบเมนู</button>
+            </div>
+          </div>
+        `;
+      });
+    });
+
+    function toggleMenuStatus(id, currentStatus) {
+      const nextStatus = currentStatus === 'available' ? 'out_of_stock' : 'available';
+      db.collection("menus").doc(id).update({ status: nextStatus });
+    }
+
+    function deleteMenu(id) {
+      if(confirm("ยืนยันการลบเมนูรายการนี้ออกจากระบบอย่างถาวร?")) {
+        db.collection("menus").doc(id).delete();
+      }
+    }
+  </script>
+</body>
+</html>
