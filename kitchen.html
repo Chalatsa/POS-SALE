@@ -6,21 +6,23 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 </head>
 <body class="bg-slate-900 text-white font-sans p-6">
 
+  <!-- ส่วนหัวบนหน้าจอ -->
   <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-6">
     <h1 class="text-2xl font-black text-amber-400">🔥 ระบบจัดการหลังร้านแบบ Real-time</h1>
     <span class="bg-green-500 text-xs px-3 py-1 rounded-full font-bold animate-pulse">ระบบเชื่อมต่อ Firebase เสถียร</span>
   </div>
 
+  <!-- แท็บกดสลับหน้าควบคุม -->
   <div class="flex flex-wrap gap-3 mb-6">
     <button onclick="switchTab('queue')" id="btn-tab-queue" class="bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-all shadow-md">📋 จัดการคิวอาหาร</button>
     <button onclick="switchTab('menu')" id="btn-tab-menu" class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">⚙️ แผงควบคุม Admin & เพิ่มเมนู</button>
     <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">📊 สรุปยอดขาย & กำไร</button>
   </div>
 
+  <!-- ================= หน้าที่ 1: หน้าจอเรียงคิวอาหารในครัว ================= -->
   <div id="tab-queue-content" class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-slate-800 p-4 rounded-2xl border border-red-500/30">
       <h2 class="text-red-400 font-bold mb-3 flex justify-between items-center"><span>🔴 รอคิว (มาก่อนทำก่อน)</span></h2>
@@ -36,6 +38,7 @@
     </div>
   </div>
 
+  <!-- ================= หน้าที่ 2: หน้าแอดมิน เพิ่มเมนู (ปรับกลับมาเป็น URL พร้อมลิงก์ฝากรูป) ================= -->
   <div id="tab-menu-content" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4 h-fit">
       <h2 class="text-xl font-bold text-amber-400">➕ เพิ่มเมนูใหม่ของร้าน</h2>
@@ -56,13 +59,16 @@
         </div>
         
         <div>
-          <label class="text-xs font-semibold text-gray-400">รูปภาพเมนูสินค้า (เลือกไฟล์หรือเปิดกล้องถ่าย)</label>
-          <input type="file" id="new-menu-image-file" accept="image/*" class="w-full p-2 rounded-xl mt-1 text-xs text-gray-400 bg-slate-700 border border-slate-600 focus:outline-none file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-400">
+          <div class="flex justify-between items-center">
+            <label class="text-xs font-semibold text-gray-400">ลิงก์รูปภาพเมนู (URL)</label>
+            <!-- ปุ่มทางลัดเปิดเว็บฝากรูปฟรี -->
+            <a href="https://imgbb.com/" target="_blank" class="text-[10px] bg-slate-700 text-amber-400 px-2 py-0.5 rounded border border-slate-600 hover:bg-slate-600 transition-all">🌐 ไปเว็บฝากรูปฟรี</a>
+          </div>
+          <input type="text" id="new-menu-image" placeholder="วางลิงก์รูปภาพที่ได้จากเว็บฝากรูป..." class="w-full p-2.5 rounded-xl mt-1 focus:outline-none text-xs">
+          <p class="text-[10px] text-gray-500 mt-1">*เอารูปไปฝากที่เว็บ แล้วก๊อปปี้ลิงก์ตรง (Direct Link) ที่ลงท้ายด้วย .jpg หรือ .png มาวาง</p>
         </div>
-        
-        <div id="upload-status" class="text-xs text-amber-400 font-semibold hidden animate-pulse">⏳ กำลังอัปโหลดรูปภาพเข้าสู่ระบบ...</div>
 
-        <button onclick="addNewMenu()" id="btn-save-menu" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
+        <button onclick="addNewMenu()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
           💾 บันทึกและเปิดขายทันที
         </button>
       </div>
@@ -75,6 +81,7 @@
     </div>
   </div>
 
+  <!-- ================= หน้าที่ 3: แท็บแดชบอร์ด สรุปยอดขายและกำไร ================= -->
   <div id="tab-dashboard-content" class="hidden space-y-6">
     <div class="flex justify-between items-center">
       <h2 class="text-xl font-bold text-amber-400">📊 สรุปสถิติผลประกอบการ (ยอดออเดอร์ที่สำเร็จแล้ว)</h2>
@@ -122,7 +129,6 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const storage = firebase.storage(); // เปิดใช้งานคลังวัตถุรูปภาพ
 
     function playBeep() {
       try {
@@ -267,68 +273,31 @@
       });
     }
 
-    // --- ปรับปรุงฟังก์ชัน: เพิ่มเมนูใหม่โดยการอัปโหลดไฟล์รูปภาพจริง ---
-    async function addNewMenu() {
+    // --- ฟังก์ชันเพิ่มเมนูใหม่ (ผ่าน URL ลิงก์รูปภาพ) ---
+    function addNewMenu() {
       const name = document.getElementById('new-menu-name').value;
       const price = parseFloat(document.getElementById('new-menu-price').value);
       const cost = parseFloat(document.getElementById('new-menu-cost').value);
-      const fileInput = document.getElementById('new-menu-image-file');
-      const file = fileInput.files[0];
+      const imageUrl = document.getElementById('new-menu-image').value || "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500"; 
 
-      if (!name || !price) return alert("กรุณากรอกข้อมูล ชื่อเมนู และ ราคาขาย ให้เรียบร้อยครับ");
+      if(!name || !price) return alert("กรุณากรอกข้อมูล ชื่อเมนู และ ราคาขาย ให้เรียบร้อยครับ");
 
-      const btnSave = document.getElementById('btn-save-menu');
-      const statusLbl = document.getElementById('upload-status');
-      
-      // ปิดปุ่มชั่วคราวและเปิดแจ้งเตือนสถานะการอัปโหลด
-      btnSave.disabled = true;
-      btnSave.innerText = "⏳ ระบบกำลังทำงาน...";
-      statusLbl.classList.remove('hidden');
-
-      let imageUrl = "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500"; // รูปสำรองถ้าไม่ได้เลือกไฟล์
-
-      try {
-        if (file) {
-          // สุ่มชื่อไฟล์ภาพเพื่อไม่ให้ชื่อซ้ำกันในคลัง
-          const fileExtension = file.name.split('.').pop();
-          const fileName = `menu_${Date.now()}.${fileExtension}`;
-          
-          // สั่งอัปโหลดไฟล์ภาพเข้าไปเก็บที่โฟลเดอร์ชื่อ menu-images ใน Firebase Storage
-          const storageRef = storage.ref('menu-images/' + fileName);
-          const uploadTask = await storageRef.put(file);
-          
-          // ดึง URL ลิงก์รูปภาพสาธารณะจากเซิร์ฟเวอร์มาใช้งาน
-          imageUrl = await uploadTask.ref.getDownloadURL();
-        }
-
-        // นำข้อมูลทั้งหมดไปผูกบันทึกใน Firestore Database คอลเลกชัน menus
-        await db.collection("menus").add({
-          name: name,
-          price: price,
-          cost: cost || 0,
-          image: imageUrl,
-          status: "available"
-        });
-
-        alert("เพิ่มเมนูและอัปโหลดรูปภาพสำเร็จเรียบร้อย!");
-        
-        // ล้างข้อมูลช่องกรอกฟอร์มเพื่อเตรียมพร้อมสำหรับเมนูถัดไป
+      db.collection("menus").add({
+        name: name,
+        price: price,
+        cost: cost || 0,
+        image: imageUrl,
+        status: "available"
+      }).then(() => {
+        alert("เพิ่มเมนูลงในระบบสำเร็จเรียบร้อย!");
         document.getElementById('new-menu-name').value = "";
         document.getElementById('new-menu-price').value = "";
         document.getElementById('new-menu-cost').value = "";
-        fileInput.value = ""; // ล้างไฟล์รูปภาพที่เลือกไว้
-
-      } catch (error) {
-        alert("เกิดข้อผิดพลาดในการอัปโหลด: " + error.message);
-      } finally {
-        // เปิดการทำงานของปุ่มบันทึกกลับมาปกติ
-        btnSave.disabled = false;
-        btnSave.innerText = "💾 บันทึกและเปิดขายทันที";
-        statusLbl.classList.add('hidden');
-      }
+        document.getElementById('new-menu-image').value = "";
+      });
     }
 
-    // --- ดึงรายการเมนูทั้งหมดของร้านแสดงผล ---
+    // --- ดึงรายการเมนูมาแสดงผลในแผง Admin ---
     db.collection("menus").onSnapshot((snapshot) => {
       const adminMenuList = document.getElementById('admin-menu-list');
       adminMenuList.innerHTML = "";
@@ -354,7 +323,7 @@
               <button onclick="toggleMenuStatus('${doc.id}', '${item.status}')" class="text-xs bg-slate-600 hover:bg-slate-500 px-2.5 py-1 rounded text-white font-medium transition-all">
                 ${item.status === 'available' ? 'ปิดขาย' : 'เปิดขาย'}
               </button>
-              <button onclick="deleteMenu('${doc.id}', '${item.image}')" class="text-xs bg-red-900/40 hover:bg-red-900/80 px-2.5 py-1 rounded text-red-300 font-medium transition-all">ลบเมนู</button>
+              <button onclick="deleteMenu('${doc.id}')" class="text-xs bg-red-900/40 hover:bg-red-900/80 px-2.5 py-1 rounded text-red-300 font-medium transition-all">ลบเมนู</button>
             </div>
           </div>
         `;
@@ -366,18 +335,9 @@
       db.collection("menus").doc(id).update({ status: nextStatus });
     }
 
-    // ปรับปรุงฟังก์ชันลบเมนู ให้ลบไฟล์รูปภาพออกจาก Storage ด้วยเพื่อป้องกันพื้นที่เต็ม
-    function deleteMenu(id, imageUrl) {
+    function deleteMenu(id) {
       if(confirm("ยืนยันการลบเมนูรายการนี้ออกจากระบบอย่างถาวร?")) {
-        db.collection("menus").doc(id).delete().then(() => {
-          // ถ้ารูปภาพนั้นถูกอัปโหลดขึ้น Storage ของเราเอง ให้ตามไปลบทิ้งด้วย
-          if(imageUrl && imageUrl.includes("firebasestorage.googleapis.com")) {
-            try {
-              const storageRef = storage.refFromURL(imageUrl);
-              storageRef.delete();
-            } catch(e) { console.log("ลบไฟล์ภาพในคลังไม่สำเร็จ หรือไฟล์ไม่มีอยู่แล้ว"); }
-          }
-        });
+        db.collection("menus").doc(id).delete();
       }
     }
   </script>
