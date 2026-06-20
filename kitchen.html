@@ -14,32 +14,28 @@
     <span class="bg-green-500 text-xs px-3 py-1 rounded-full font-bold animate-pulse">ระบบเชื่อมต่อ Firebase เสถียร</span>
   </div>
 
-  <div class="flex gap-4 mb-6">
+  <div class="flex flex-wrap gap-3 mb-6">
     <button onclick="switchTab('queue')" id="btn-tab-queue" class="bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-all shadow-md">📋 จัดการคิวอาหาร</button>
     <button onclick="switchTab('menu')" id="btn-tab-menu" class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">⚙️ แผงควบคุม Admin & เพิ่มเมนู</button>
+    <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">📊 สรุปยอดขาย & กำไร</button>
   </div>
 
   <div id="tab-queue-content" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    
     <div class="bg-slate-800 p-4 rounded-2xl border border-red-500/30">
       <h2 class="text-red-400 font-bold mb-3 flex justify-between items-center"><span>🔴 รอคิว (มาก่อนทำก่อน)</span></h2>
       <div id="queue-pending" class="space-y-3"></div>
     </div>
-
     <div class="bg-slate-800 p-4 rounded-2xl border border-blue-500/30">
       <h2 class="text-blue-400 font-bold mb-3">🔵 กำลังปรุง...</h2>
       <div id="queue-cooking" class="space-y-3"></div>
     </div>
-
     <div class="bg-slate-800 p-4 rounded-2xl border border-green-500/30">
       <h2 class="text-green-400 font-bold mb-3">🟢 ทำเสร็จแล้ว (รอส่งมอบให้ลูกค้า)</h2>
       <div id="queue-ready" class="space-y-3"></div>
     </div>
-
   </div>
 
   <div id="tab-menu-content" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
-    
     <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4 h-fit">
       <h2 class="text-xl font-bold text-amber-400">➕ เพิ่มเมนูใหม่ของร้าน</h2>
       <div class="space-y-3 text-slate-900">
@@ -66,14 +62,48 @@
         </button>
       </div>
     </div>
-
     <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 md:col-span-2">
       <h2 class="text-xl font-bold text-gray-300 mb-4">📋 รายการเมนูปัจจุบันทั้งหมดภายในแอป</h2>
       <div id="admin-menu-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <p class="text-gray-500 text-sm">กำลังโหลดข้อมูลรายการเมนูของร้าน...</p>
       </div>
     </div>
+  </div>
 
+  <div id="tab-dashboard-content" class="hidden space-y-6">
+    <div class="flex justify-between items-center">
+      <h2 class="text-xl font-bold text-amber-400">📊 สรุปสถิติผลประกอบการ (ยอดออเดอร์ที่สำเร็จแล้ว)</h2>
+      <button onclick="calculateSales()" class="bg-slate-700 hover:bg-slate-600 text-xs text-amber-300 font-bold px-3 py-1.5 rounded-lg border border-slate-600">🔄 รีเฟรชข้อมูลเงิน</button>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-slate-800 p-5 rounded-2xl border border-amber-500/20 space-y-3 shadow-md">
+        <h3 class="text-lg font-bold text-amber-400 border-b border-slate-700 pb-2 flex justify-between"><span>📅 ยอดขายวันนี้</span><span class="text-xs text-gray-400 font-normal" id="current-date-lbl">-</span></h3>
+        <div class="grid grid-cols-2 gap-2 text-sm pt-1">
+          <p class="text-gray-400">ยอดขายรวม:</p><p class="text-right font-bold text-white">฿<span id="sales-day">0</span></p>
+          <p class="text-gray-400">ต้นทุนรวม:</p><p class="text-right font-bold text-red-400">฿<span id="cost-day">0</span></p>
+          <p class="text-amber-400 font-semibold border-t border-slate-700 pt-1">กำไรสุทธิ:</p><p class="text-right font-black text-green-400 border-t border-slate-700 pt-1">฿<span id="profit-day">0</span></p>
+        </div>
+      </div>
+
+      <div class="bg-slate-800 p-5 rounded-2xl border border-blue-500/20 space-y-3 shadow-md">
+        <h3 class="text-lg font-bold text-blue-400 border-b border-slate-700 pb-2 flex justify-between"><span>🗓️ ยอดขายเดือนนี้</span><span class="text-xs text-gray-400 font-normal" id="current-month-lbl">-</span></h3>
+        <div class="grid grid-cols-2 gap-2 text-sm pt-1">
+          <p class="text-gray-400">ยอดขายรวม:</p><p class="text-right font-bold text-white">฿<span id="sales-month">0</span></p>
+          <p class="text-gray-400">ต้นทุนรวม:</p><p class="text-right font-bold text-red-400">฿<span id="cost-month">0</span></p>
+          <p class="text-blue-400 font-semibold border-t border-slate-700 pt-1">กำไรสุทธิ:</p><p class="text-right font-black text-green-400 border-t border-slate-700 pt-1">฿<span id="profit-month">0</span></p>
+        </div>
+      </div>
+
+      <div class="bg-slate-800 p-5 rounded-2xl border border-purple-500/20 space-y-3 shadow-md">
+        <h3 class="text-lg font-bold text-purple-400 border-b border-slate-700 pb-2 flex justify-between"><span>🎆 ยอดขายปีนี้</span><span class="text-xs text-gray-400 font-normal" id="current-year-lbl">-</span></h3>
+        <div class="grid grid-cols-2 gap-2 text-sm pt-1">
+          <p class="text-gray-400">ยอดขายรวม:</p><p class="text-right font-bold text-white">฿<span id="sales-year">0</span></p>
+          <p class="text-gray-400">ต้นทุนรวม:</p><p class="text-right font-bold text-red-400">฿<span id="cost-year">0</span></p>
+          <p class="text-purple-400 font-semibold border-t border-slate-700 pt-1">กำไรสุทธิ:</p><p class="text-right font-black text-green-400 border-t border-slate-700 pt-1">฿<span id="profit-year">0</span></p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -91,7 +121,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ระบบแจ้งเตือนเสียงปิ๊งเมื่อมีลูกค้าสั่งเข้ามาใหม่
     function playBeep() {
       try {
         const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -137,6 +166,9 @@
         if(order.status === "กำลังทำ") document.getElementById("queue-cooking").innerHTML += cardHtml;
         if(order.status === "เสร็จแล้ว") document.getElementById("queue-ready").innerHTML += cardHtml;
       });
+      
+      // เมื่อไหร่ก็ตามที่มีออเดอร์ถูกอัปเดต ให้คำนวณเงินแดชบอร์ดใหม่ด้วยแบบอัตโนมัติ
+      calculateSales();
     });
 
     function getActionButtons(id, status) {
@@ -150,26 +182,99 @@
       db.collection("orders").doc(id).update({ status: newStatus });
     }
 
-    // --- ส่วนงานจัดการเมนูร้านอาหาร (Admin) ---
+    // --- ส่วนงานสลับหน้าแท็บควบคุม ---
     function switchTab(tab) {
       const queueSection = document.getElementById('tab-queue-content');
       const menuSection = document.getElementById('tab-menu-content');
+      const dashboardSection = document.getElementById('tab-dashboard-content');
+      
       const btnQueue = document.getElementById('btn-tab-queue');
       const btnMenu = document.getElementById('btn-tab-menu');
+      const btnDashboard = document.getElementById('btn-tab-dashboard');
+
+      // ซ่อนทุกอันก่อน
+      queueSection.classList.add('hidden');
+      menuSection.classList.add('hidden');
+      dashboardSection.classList.add('hidden');
+      btnQueue.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
+      btnMenu.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
+      btnDashboard.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
 
       if(tab === 'menu') {
-        queueSection.classList.add('hidden');
         menuSection.classList.remove('hidden');
         btnMenu.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
-        btnQueue.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
+      } else if(tab === 'dashboard') {
+        dashboardSection.classList.remove('hidden');
+        btnDashboard.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
+        calculateSales(); // โหลดการคำนวณเงินใหม่ตอนเปิดหน้านี้
       } else {
         queueSection.classList.remove('hidden');
-        menuSection.classList.add('hidden');
         btnQueue.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
-        btnMenu.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
       }
     }
 
+    // --- ฟังก์ชันคำนวณรายรับ-รายจ่าย แดชบอร์ด (เรียบร้อยครอบคลุมปี 2026) ---
+    function calculateSales() {
+      db.collection("orders").where("status", "==", "เสร็จสิ้น").get().then((snapshot) => {
+        let daySales = 0, dayCost = 0, dayProfit = 0;
+        let monthSales = 0, monthCost = 0, monthProfit = 0;
+        let yearSales = 0, yearCost = 0, yearProfit = 0;
+
+        const now = new Date();
+        const currentDay = now.getDate();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        // แสดงข้อความหัวตารางให้สอดคล้องกับเวลาปัจจุบัน
+        document.getElementById("current-date-lbl").innerText = now.toLocaleDateString('th-TH', {day:'numeric', month:'short'});
+        document.getElementById("current-month-lbl").innerText = now.toLocaleDateString('th-TH', {month:'long'});
+        document.getElementById("current-year-lbl").innerText = currentYear + 543; // แปลงเป็น พ.ศ.
+
+        snapshot.forEach((doc) => {
+          const order = doc.data();
+          if(!order.timestamp) return; // ข้ามออเดอร์ที่เวลาฝั่งเซิร์ฟเวอร์ยังไม่เสร็จสมบูรณ์
+
+          const orderDate = order.timestamp.toDate();
+          const oDay = orderDate.getDate();
+          const oMonth = orderDate.getMonth();
+          const oYear = orderDate.getFullYear();
+
+          const price = order.totalPrice || 0;
+          const cost = order.totalCost || 0;
+          const profit = order.profit || (price - cost);
+
+          // 1. คำนวณยอดรายปี
+          if(oYear === currentYear) {
+            yearSales += price; yearCost += cost; yearProfit += profit;
+
+            // 2. คำนวณยอดรายเดือน
+            if(oMonth === currentMonth) {
+              monthSales += price; monthCost += cost; monthProfit += profit;
+
+              // 3. คำนวณยอดรายวัน
+              if(oDay === currentDay) {
+                daySales += price; dayCost += cost; dayProfit += profit;
+              }
+            }
+          }
+        });
+
+        // นำตัวเลขไปแสดงผลบนการ์ดในหน้า Dashboard
+        document.getElementById("sales-day").innerText = daySales.toLocaleString();
+        document.getElementById("cost-day").innerText = dayCost.toLocaleString();
+        document.getElementById("profit-day").innerText = dayProfit.toLocaleString();
+
+        document.getElementById("sales-month").innerText = monthSales.toLocaleString();
+        document.getElementById("cost-month").innerText = monthCost.toLocaleString();
+        document.getElementById("profit-month").innerText = monthProfit.toLocaleString();
+
+        document.getElementById("sales-year").innerText = yearSales.toLocaleString();
+        document.getElementById("cost-year").innerText = yearCost.toLocaleString();
+        document.getElementById("profit-year").innerText = yearProfit.toLocaleString();
+      });
+    }
+
+    // --- ส่วนงานจัดการเมนูร้านอาหาร (Admin) ---
     function addNewMenu() {
       const name = document.getElementById('new-menu-name').value;
       const price = parseFloat(document.getElementById('new-menu-price').value);
@@ -230,6 +335,7 @@
       db.collection("menus").doc(id).update({ status: nextStatus });
     }
 
+    // แก้ไขฟังก์ชันการลบเมนูให้ปลอดภัย
     function deleteMenu(id) {
       if(confirm("ยืนยันการลบเมนูรายการนี้ออกจากระบบอย่างถาวร?")) {
         db.collection("menus").doc(id).delete();
