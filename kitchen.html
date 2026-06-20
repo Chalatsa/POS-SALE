@@ -172,7 +172,7 @@
       } catch(e) { console.log("ติดขัดเรื่องสิทธิ์เล่นเสียง"); }
     }
 
-    // --- ระบบติดตามคิวอาหารในครัวแบบ Real-time ---
+    // --- ระบบติดตามคิวอาหารในครัวแบบ Real-time (เวอร์ชันแสดงยอดเงินรวมและรายการสั่งเพิ่ม) ---
     db.collection("orders").orderBy("timestamp", "asc").onSnapshot((snapshot) => {
       document.getElementById("queue-pending").innerHTML = "";
       document.getElementById("queue-cooking").innerHTML = "";
@@ -188,17 +188,31 @@
         const order = doc.data();
         if (order.status === "เสร็จสิ้น") return;
 
+        // วนลูปแสดงรายการอาหารและจำนวน
         const itemsText = order.items.map(i => `<li class="font-bold text-lg text-amber-300">• ${i.name} <span class="text-white bg-slate-900 px-1.5 py-0.5 rounded text-sm ml-1">x ${i.qty}</span></li>`).join('');
         
+        // คำนวณจำนวนชิ้นรวมทั้งหมดในออเดอร์นี้
+        const totalQty = order.items.reduce((sum, item) => sum + item.qty, 0);
+
         const cardHtml = `
-          <div class="bg-slate-700 p-4 rounded-xl shadow space-y-2 border border-slate-600">
-            <div class="flex justify-between items-center">
-              <span class="text-xl font-black bg-slate-900 px-3 py-1 rounded text-amber-400">คิว #${order.queueNo}</span>
-              <span class="text-xs text-gray-300 bg-slate-800 px-2 py-1 rounded">โต๊ะ: ${order.tableNum}</span>
+          <div class="bg-slate-700 p-4 rounded-xl shadow space-y-2 border border-slate-600 flex flex-col justify-between min-h-[220px]">
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-xl font-black bg-slate-900 px-3 py-1 rounded text-amber-400">คิว #${order.queueNo}</span>
+                <span class="text-xs text-gray-300 bg-slate-800 px-2 py-1 rounded font-bold">โต๊ะ: ${order.tableNum}</span>
+              </div>
+              
+              <div class="bg-amber-500/10 border border-amber-500/30 p-2 rounded-lg flex justify-between items-center text-xs">
+                <span class="text-amber-400 font-medium">💵 ยอดเงินรวม (${totalQty} ชิ้น):</span>
+                <span class="text-base font-black text-amber-400">฿${(order.totalPrice || 0).toLocaleString()}</span>
+              </div>
+
+              <ul class="space-y-1 pt-1">${itemsText}</ul>
+              
+              ${order.note ? `<p class="text-xs bg-red-950/40 text-red-300 p-2 rounded border border-red-900/30 break-words">💬 หมายเหตุ: ${order.note}</p>` : ''}
             </div>
-            <ul class="space-y-1">${itemsText}</ul>
-            ${order.note ? `<p class="text-xs bg-red-950/40 text-red-300 p-1.5 rounded border border-red-900/30">💬 หมายเหตุ: ${order.note}</p>` : ''}
-            <div class="pt-2 flex gap-2">
+
+            <div class="pt-3 flex gap-2">
               ${getActionButtons(doc.id, order.status)}
             </div>
           </div>
