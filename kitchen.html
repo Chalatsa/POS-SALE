@@ -1,40 +1,29 @@
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบหลังเตาอัจฉริยะ - ร้านโตเกียว</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
-
 <body class="bg-slate-900 text-white font-sans p-6">
 
-  <!-- ส่วนหัวบนหน้าจอ -->
   <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-6">
     <h1 class="text-2xl font-black text-amber-400">🔥 ระบบจัดการหลังร้านแบบ Real-time</h1>
-    <span class="bg-green-500 text-xs px-3 py-1 rounded-full font-bold animate-pulse">ระบบเชื่อมต่อ Firebase
-      เสถียร</span>
+    <span class="bg-green-500 text-xs px-3 py-1 rounded-full font-bold animate-pulse">ระบบเชื่อมต่อ Firebase เสถียร</span>
   </div>
 
-  <!-- แท็บกดสลับหน้าควบคุม -->
   <div class="flex flex-wrap gap-3 mb-6">
-    <button onclick="switchTab('queue')" id="btn-tab-queue"
-      class="bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-all shadow-md">📋
-      จัดการคิวอาหาร</button>
-    <button onclick="switchTab('menu')" id="btn-tab-menu"
-      class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">⚙️ แผงควบคุม Admin &
-      เพิ่มเมนู</button>
-    <button onclick="switchTab('dashboard')" id="btn-tab-dashboard"
-      class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">📊 สรุปยอดขาย & กำไร</button>
+    <button onclick="switchTab('queue')" id="btn-tab-queue" class="bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-all shadow-md">📋 จัดการคิวอาหาร</button>
+    <button onclick="switchTab('menu')" id="btn-tab-menu" class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">⚙️ แผงควบคุม Admin & เพิ่มเมนู</button>
+    <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl transition-all">📊 สรุปยอดขาย & กำไรย้อนหลัง</button>
   </div>
 
-  <!-- ================= หน้าที่ 1: หน้าจอเรียงคิวอาหารในครัว ================= -->
   <div id="tab-queue-content" class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-slate-800 p-4 rounded-2xl border border-red-500/30">
-      <h2 class="text-red-400 font-bold mb-3 flex justify-between items-center"><span>🔴 รอคิว (มาก่อนทำก่อน)</span>
-      </h2>
+      <h2 class="text-red-400 font-bold mb-3 flex justify-between items-center"><span>🔴 รอคิว (มาก่อนทำก่อน)</span></h2>
       <div id="queue-pending" class="space-y-3"></div>
     </div>
     <div class="bg-slate-800 p-4 rounded-2xl border border-blue-500/30">
@@ -47,45 +36,35 @@
     </div>
   </div>
 
-  <!-- ================= หน้าที่ 2: หน้าแอดมิน เพิ่มเมนู (ปรับกลับมาเป็น URL พร้อมลิงก์ฝากรูป) ================= -->
   <div id="tab-menu-content" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4 h-fit">
       <h2 class="text-xl font-bold text-amber-400">➕ เพิ่มเมนูใหม่ของร้าน</h2>
       <div class="space-y-3 text-slate-900">
         <div>
           <label class="text-xs font-semibold text-gray-400">ชื่อเมนูอาหาร/ไส้โตเกียว</label>
-          <input type="text" id="new-menu-name" placeholder="เช่น โตเกียวไส้ครีม"
-            class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
+          <input type="text" id="new-menu-name" placeholder="เช่น โตเกียวไส้ครีม" class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="text-xs font-semibold text-gray-400">ราคาขาย (บาท)</label>
-            <input type="number" id="new-menu-price" placeholder="10"
-              class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
+            <input type="number" id="new-menu-price" placeholder="10" class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-400">ต้นทุนวัตถุดิบ (บาท)</label>
-            <input type="number" id="new-menu-cost" placeholder="4"
-              class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
+            <input type="number" id="new-menu-cost" placeholder="4" class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
           </div>
         </div>
-
+        
         <div>
           <div class="flex justify-between items-center">
             <label class="text-xs font-semibold text-gray-400">ลิงก์รูปภาพเมนู (URL)</label>
-            <!-- ปุ่มทางลัดเปิดเว็บฝากรูปฟรี -->
-            <a href="https://imgbb.com/" target="_blank"
-              class="text-[10px] bg-slate-700 text-amber-400 px-2 py-0.5 rounded border border-slate-600 hover:bg-slate-600 transition-all">🌐
-              ไปเว็บฝากรูปฟรี</a>
+            <a href="https://imgbb.com/" target="_blank" class="text-[10px] bg-slate-700 text-amber-400 px-2 py-0.5 rounded border border-slate-600 hover:bg-slate-600 transition-all">🌐 ไปเว็บฝากรูปฟรี</a>
           </div>
-          <input type="text" id="new-menu-image" placeholder="วางลิงก์รูปภาพที่ได้จากเว็บฝากรูป..."
-            class="w-full p-2.5 rounded-xl mt-1 focus:outline-none text-xs">
-          <p class="text-[10px] text-gray-500 mt-1">*เอารูปไปฝากที่เว็บ แล้วก๊อปปี้ลิงก์ตรง (Direct Link) ที่ลงท้ายด้วย
-            .jpg หรือ .png มาวาง</p>
+          <input type="text" id="new-menu-image" placeholder="วางลิงก์รูปภาพที่ได้จากเว็บฝากรูป..." class="w-full p-2.5 rounded-xl mt-1 focus:outline-none text-xs">
+          <p class="text-[10px] text-gray-500 mt-1">*เอารูปไปฝากที่เว็บ แล้วก๊อปปี้ลิงก์ตรงที่ลงท้ายด้วย .jpg หรือ .png มาวาง</p>
         </div>
 
-        <button onclick="addNewMenu()"
-          class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
+        <button onclick="addNewMenu()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
           💾 บันทึกและเปิดขายทันที
         </button>
       </div>
@@ -98,17 +77,15 @@
     </div>
   </div>
 
-  <!-- ================= หน้าที่ 3: แท็บแดชบอร์ด สรุปยอดขายและกำไร ================= -->
   <div id="tab-dashboard-content" class="hidden space-y-6">
     <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-xl font-bold text-amber-400">📊 สถิติผลประกอบการร้าน</h2>
-        <p class="text-xs text-gray-400 mt-0.5">เลือกช่วงเวลาที่ต้องการดูข้อมูลยอดขายและกำไร</p>
+        <h2 class="text-xl font-bold text-amber-400">📊 สถิติผลประกอบการร้านย้อนหลัง</h2>
+        <p class="text-xs text-gray-400 mt-0.5">เลือกตัวกรองเวลาเพื่อดูสรุปยอดขายและรายละเอียดออเดอร์</p>
       </div>
-
+      
       <div class="flex flex-wrap items-center gap-3 text-slate-900">
-        <select id="date-filter-type" onchange="handleFilterChange()"
-          class="p-2 rounded-xl text-sm font-semibold bg-white focus:outline-none">
+        <select id="date-filter-type" onchange="handleFilterChange()" class="p-2 rounded-xl text-sm font-semibold bg-white focus:outline-none">
           <option value="today">วันนี้</option>
           <option value="yesterday">เมื่อวานนี้</option>
           <option value="this-month">เดือนนี้</option>
@@ -116,20 +93,19 @@
           <option value="this-year">ปีนี้</option>
           <option value="custom">กำหนดช่วงเวลาเอง...</option>
         </select>
-
+        
         <div id="custom-date-inputs" class="hidden flex items-center gap-2 text-white text-xs">
           <input type="date" id="start-date" class="p-2 rounded-xl text-slate-900 focus:outline-none">
           <span>ถึง</span>
           <input type="date" id="end-date" class="p-2 rounded-xl text-slate-900 focus:outline-none">
         </div>
 
-        <button onclick="calculateSales()"
-          class="bg-amber-500 hover:bg-amber-600 font-bold text-xs text-slate-950 px-4 py-2 rounded-xl shadow transition-all">
+        <button onclick="calculateSales()" class="bg-amber-500 hover:bg-amber-600 font-bold text-xs text-slate-950 px-4 py-2 rounded-xl shadow transition-all">
           🔍 ค้นหาข้อมูล
         </button>
       </div>
     </div>
-
+    
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div class="bg-slate-800 p-6 rounded-2xl border border-amber-500/20 space-y-2 shadow-md">
         <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">💰 ยอดขายรวม (รายรับ)</h3>
@@ -163,7 +139,7 @@
           </thead>
           <tbody id="history-table-body">
             <tr>
-              <td colspan="5" class="p-4 text-center text-gray-500">กดปุ่ม "ค้นหาข้อมูล" เพื่อดึงประวัติช่วงเวลานี้</td>
+              <td colspan="5" class="p-4 text-center text-gray-500">กำลังโหลดประวัติข้อมูลการขาย...</td>
             </tr>
           </tbody>
         </table>
@@ -172,6 +148,7 @@
   </div>
 
   <script>
+    // การตั้งค่า Firebase ของโปรเจกต์คุณ
     const firebaseConfig = {
       apiKey: "AIzaSyC-slki_yhAJuHbizE4q1CDUz9rV4vHeL4",
       authDomain: "pos-sale-9c1d6.firebaseapp.com",
@@ -185,38 +162,39 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // ฟังก์ชันเล่นเสียงเตือนเมื่อมีออเดอร์ใหม่เข้าครัว
     function playBeep() {
       try {
         const context = new (window.AudioContext || window.webkitAudioContext)();
         const osc = context.createOscillator();
         osc.type = "sine"; osc.frequency.setValueAtTime(850, context.currentTime);
         osc.connect(context.destination); osc.start(); osc.stop(context.currentTime + 0.18);
-      } catch (e) { console.log("ติดขัดเรื่องสิทธิ์การเล่นเสียงบนบราวเซอร์"); }
+      } catch(e) { console.log("ติดขัดเรื่องสิทธิ์เล่นเสียง"); }
     }
 
-    // --- จัดการคิวอาหาร ---
+    // --- ระบบติดตามคิวอาหารในครัวแบบ Real-time ---
     db.collection("orders").orderBy("timestamp", "asc").onSnapshot((snapshot) => {
       document.getElementById("queue-pending").innerHTML = "";
       document.getElementById("queue-cooking").innerHTML = "";
       document.getElementById("queue-ready").innerHTML = "";
 
       let hasNewOrder = false;
-      snapshot.docChanges().forEach(change => {
-        if (change.type === "added" && !snapshot.metadata.hasPendingWrites) hasNewOrder = true;
+      snapshot.docChanges().forEach(change => { 
+        if(change.type === "added" && !snapshot.metadata.hasPendingWrites) hasNewOrder = true; 
       });
-      if (hasNewOrder) playBeep();
+      if(hasNewOrder) playBeep(); 
 
       snapshot.forEach((doc) => {
         const order = doc.data();
         if (order.status === "เสร็จสิ้น") return;
 
         const itemsText = order.items.map(i => `<li class="font-bold text-lg text-amber-300">• ${i.name} <span class="text-white bg-slate-900 px-1.5 py-0.5 rounded text-sm ml-1">x ${i.qty}</span></li>`).join('');
-
+        
         const cardHtml = `
           <div class="bg-slate-700 p-4 rounded-xl shadow space-y-2 border border-slate-600">
             <div class="flex justify-between items-center">
               <span class="text-xl font-black bg-slate-900 px-3 py-1 rounded text-amber-400">คิว #${order.queueNo}</span>
-              <span class="text-xs text-gray-300 bg-slate-800 px-2 py-1 rounded">${order.tableNum}</span>
+              <span class="text-xs text-gray-300 bg-slate-800 px-2 py-1 rounded">โต๊ะ: ${order.tableNum}</span>
             </div>
             <ul class="space-y-1">${itemsText}</ul>
             ${order.note ? `<p class="text-xs bg-red-950/40 text-red-300 p-1.5 rounded border border-red-900/30">💬 หมายเหตุ: ${order.note}</p>` : ''}
@@ -226,17 +204,16 @@
           </div>
         `;
 
-        if (order.status === "รอทำ") document.getElementById("queue-pending").innerHTML += cardHtml;
-        if (order.status === "กำลังทำ") document.getElementById("queue-cooking").innerHTML += cardHtml;
-        if (order.status === "เสร็จแล้ว") document.getElementById("queue-ready").innerHTML += cardHtml;
+        if(order.status === "รอทำ") document.getElementById("queue-pending").innerHTML += cardHtml;
+        if(order.status === "กำลังทำ") document.getElementById("queue-cooking").innerHTML += cardHtml;
+        if(order.status === "เสร็จแล้ว") document.getElementById("queue-ready").innerHTML += cardHtml;
       });
-      calculateSales();
     });
 
     function getActionButtons(id, status) {
-      if (status === "รอทำ") return `<button onclick="updateStatus('${id}', 'กำลังทำ')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold text-sm transition-all shadow">🍳 เริ่มทำอาหาร</button>`;
-      if (status === "กำลังทำ") return `<button onclick="updateStatus('${id}', 'เสร็จแล้ว')" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded font-bold text-sm transition-all shadow">🥞 ทำเสร็จแล้ว</button>`;
-      if (status === "เสร็จแล้ว") return `<button onclick="updateStatus('${id}', 'เสร็จสิ้น')" class="w-full bg-slate-500 hover:bg-slate-600 py-2 rounded font-bold text-sm transition-all">✅ ลูกค้ารับของแล้ว</button>`;
+      if(status === "รอทำ") return `<button onclick="updateStatus('${id}', 'กำลังทำ')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold text-sm transition-all shadow">🍳 เริ่มทำอาหาร</button>`;
+      if(status === "กำลังทำ") return `<button onclick="updateStatus('${id}', 'เสร็จแล้ว')" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded font-bold text-sm transition-all shadow">🥞 ทำเสร็จแล้ว</button>`;
+      if(status === "เสร็จแล้ว") return `<button onclick="updateStatus('${id}', 'เสร็จสิ้น')" class="w-full bg-slate-500 hover:bg-slate-600 py-2 rounded font-bold text-sm transition-all">✅ ลูกค้ารับของแล้ว</button>`;
       return '';
     }
 
@@ -244,12 +221,12 @@
       db.collection("orders").doc(id).update({ status: newStatus });
     }
 
-    // --- สลับหน้าแท็บควบคุม ---
+    // --- จัดการปุ่มสลับแท็บเมนูควบคุม ---
     function switchTab(tab) {
       const queueSection = document.getElementById('tab-queue-content');
       const menuSection = document.getElementById('tab-menu-content');
       const dashboardSection = document.getElementById('tab-dashboard-content');
-
+      
       const btnQueue = document.getElementById('btn-tab-queue');
       const btnMenu = document.getElementById('btn-tab-menu');
       const btnDashboard = document.getElementById('btn-tab-dashboard');
@@ -261,21 +238,20 @@
       btnMenu.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
       btnDashboard.className = "bg-slate-700 text-gray-300 font-bold px-5 py-2.5 rounded-xl";
 
-      if (tab === 'menu') {
+      if(tab === 'menu') {
         menuSection.classList.remove('hidden');
         btnMenu.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
-      } else if (tab === 'dashboard') {
+      } else if(tab === 'dashboard') {
         dashboardSection.classList.remove('hidden');
         btnDashboard.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
-        calculateSales();
+        calculateSales(); // บังคับคำนวณข้อมูลการขายขึ้นมาแสดงผลทันทีเมื่อเปิดแท็บ
       } else {
         queueSection.classList.remove('hidden');
         btnQueue.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
       }
     }
 
-    // --- คำนวณรายรับ-รายจ่าย แดชบอร์ด ---
-    // ฟังก์ชันซ่อน/แสดง ช่องเลือกวันที่แบบกำหนดเอง
+    // --- ส่วนจัดการตัวเลือกตัวกรองช่วงเวลาใน แดชบอร์ด ---
     function handleFilterChange() {
       const type = document.getElementById("date-filter-type").value;
       const customInputs = document.getElementById("custom-date-inputs");
@@ -286,13 +262,12 @@
       }
     }
 
-    // ฟังก์ชันคำนวณรายรับ-รายจ่ายย้อนหลังอัจฉริยะ
+    // --- 📊 ฟังก์ชันคำนวณสรุปผลยอดขายและประวัติออเดอร์ย้อนหลัง ---
     function calculateSales() {
       const filterType = document.getElementById("date-filter-type").value;
       let startDate = new Date();
       let endDate = new Date();
 
-      // เซ็ตเวลาเริ่มต้นของวันนี้เป็น 00:00:00 และ สิ้นสุดเป็น 23:59:59
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 999);
 
@@ -305,7 +280,7 @@
       } 
       else if (filterType === "last-month") {
         startDate = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1);
-        endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0, 23, 59, 59, 999);
+        endDate = new Date(startDate.getFullYear(), startDate.getMonth(), 0, 23, 59, 59, 999);
       } 
       else if (filterType === "this-year") {
         startDate = new Date(startDate.getFullYear(), 0, 1);
@@ -319,14 +294,14 @@
         endDate = new Date(endVal); endDate.setHours(23,59,59,999);
       }
 
-      // ปรับป้ายข้อความกำกับช่วงเวลาให้แม่ค้าดูง่าย
+      // แสดงวันเวลากำกับกล่องข้อมูลสรุป
       const dateOption = { day: 'numeric', month: 'short', year: 'numeric' };
       const rangeText = `${startDate.toLocaleDateString('th-TH', dateOption)} ถึง ${endDate.toLocaleDateString('th-TH', dateOption)}`;
       document.getElementById("stat-range-lbl-1").innerText = rangeText;
       document.getElementById("stat-range-lbl-2").innerText = rangeText;
       document.getElementById("stat-range-lbl-3").innerText = rangeText;
 
-      // 🚨 เทคนิคเด็ด: ใช้คิวรี่ช่วงเวลา เพื่อค้นหาเฉพาะข้อมูลเท่าที่จำเป็น! ไม่ดึงมาทั้งหมด ช่วยประหยัดค่าใช้จ่าย Firebase
+      // ค้นหาข้อมูลบนคลัง Firebase ตามช่วงเวลาที่เราเลือกคัดกรอง
       db.collection("orders")
         .where("status", "==", "เสร็จสิ้น")
         .where("timestamp", ">=", startDate)
@@ -340,49 +315,79 @@
 
           if (snapshot.empty) {
             tableRowsHtml = `<tr><td colspan="5" class="p-4 text-center text-gray-500">❌ ไม่พบยอดขายใดๆ ในช่วงเวลาที่เลือก</td></tr>`;
+          } else {
+            snapshot.forEach((doc) => {
+              const order = doc.data();
+              const price = order.totalPrice || 0;
+              const cost = order.totalCost || 0;
+              const profit = order.profit || (price - cost);
+
+              totalSales += price;
+              totalCost += cost;
+              totalProfit += profit;
+
+              const orderTime = order.timestamp ? order.timestamp.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) : '-';
+              const itemsSummary = order.items.map(i => `${i.name} (${i.qty})`).join(', ');
+
+              tableRowsHtml += `
+                <tr class="border-b border-slate-700 hover:bg-slate-700/40">
+                  <td class="p-3 font-bold text-white">คิว #${order.queueNo} / โต๊ะ ${order.tableNum}</td>
+                  <td class="p-3 text-xs text-gray-300 truncate max-w-[200px]">${itemsSummary}</td>
+                  <td class="p-3 text-right text-white font-semibold">฿${price.toLocaleString()}</td>
+                  <td class="p-3 text-right text-green-400 font-semibold">฿${profit.toLocaleString()}</td>
+                  <td class="p-3 text-center text-xs text-gray-400">${orderTime}</td>
+                </tr>
+              `;
+            });
           }
 
-          snapshot.forEach((doc) => {
-            const order = doc.data();
-            const price = order.totalPrice || 0;
-            const cost = order.totalCost || 0;
-            const profit = order.profit || (price - cost);
-
-            totalSales += price;
-            totalCost += cost;
-            totalProfit += profit;
-
-            // แปลงเวลามาแสดงในตารางให้สวยงาม
-            const orderTime = order.timestamp ? order.timestamp.toDate().toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) : '-';
-            const itemsSummary = order.items.map(i => `${i.name} (${i.qty})`).join(', ');
-
-            tableRowsHtml += `
-              <tr class="border-b border-slate-750 hover:bg-slate-700/40">
-                <td class="p-3 font-bold text-white">คิว #${order.queueNo} / โต๊ะ ${order.tableNum}</td>
-                <td class="p-3 text-xs text-gray-300 truncate max-w-[200px]">${itemsSummary}</td>
-                <td class="p-3 text-right text-white font-semibold">฿${price.toLocaleString()}</td>
-                <td class="p-3 text-right text-green-400 font-semibold">฿${profit.toLocaleString()}</td>
-                <td class="p-3 text-center text-xs text-gray-400">${orderTime}</td>
-              </tr>
-            `;
-          });
-
-          // อัปเดตตัวเลขแสดงผลบนหน้าจอแดชบอร์ด
+          // เรนเดอร์ตัวเลขลงบนแดชบอร์ด
           document.getElementById("stat-sales").innerText = totalSales.toLocaleString();
           document.getElementById("stat-cost").innerText = totalCost.toLocaleString();
           document.getElementById("stat-profit").innerText = totalProfit.toLocaleString();
           document.getElementById("history-table-body").innerHTML = tableRowsHtml;
         }).catch((err) => {
           console.error("เกิดข้อผิดพลาดในการดึงยอดขาย: ", err);
+          // 💡 คำแนะนำสำคัญ: กรณีระบบแจ้งเปิดดัชนี (Index)
+          if(err.message.includes("index")) {
+            document.getElementById("history-table-body").innerHTML = `
+              <tr><td colspan="5" class="p-4 text-center text-amber-400 text-xs">
+                ⚠️ จำเป็นต้องเปิดสิทธิ์ Index ย้อนหลังบน Firebase คอนโซลก่อนใช้งานครั้งแรก<br>
+                ให้เปิดหน้าเว็บจิ้มปุ่ม F12 ดูในเมนู Console จะพบลิงก์สีฟ้าของกูเกิล ให้คลิกที่ลิงก์นั้นแล้วกดปุ่ม "Create Index" ครับ
+              </td></tr>`;
+          }
         });
     }
 
-    // --- ดึงรายการเมนูมาแสดงผลในแผง Admin ---
+    // --- ส่วนจัดการรายการเมนูอาหารทั้งหมด (แผงแอดมิน) ---
+    function addNewMenu() {
+      const name = document.getElementById('new-menu-name').value;
+      const price = parseFloat(document.getElementById('new-menu-price').value);
+      const cost = parseFloat(document.getElementById('new-menu-cost').value);
+      const imageUrl = document.getElementById('new-menu-image').value || "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500"; 
+
+      if(!name || !price) return alert("กรุณากรอกข้อมูล ชื่อเมนู และ ราคาขาย ให้เรียบร้อยครับ");
+
+      db.collection("menus").add({
+        name: name,
+        price: price,
+        cost: cost || 0,
+        image: imageUrl,
+        status: "available"
+      }).then(() => {
+        alert("เพิ่มเมนูลงในระบบสำเร็จเรียบร้อย!");
+        document.getElementById('new-menu-name').value = "";
+        document.getElementById('new-menu-price').value = "";
+        document.getElementById('new-menu-cost').value = "";
+        document.getElementById('new-menu-image').value = "";
+      });
+    }
+
     db.collection("menus").onSnapshot((snapshot) => {
       const adminMenuList = document.getElementById('admin-menu-list');
       adminMenuList.innerHTML = "";
-
-      if (snapshot.empty) {
+      
+      if(snapshot.empty) {
         adminMenuList.innerHTML = `<p class="text-gray-500 text-sm">ยังไม่มีเมนูใด ๆ บันทึกไว้ในแผงควบคุม</p>`;
         return;
       }
@@ -390,7 +395,7 @@
       snapshot.forEach((doc) => {
         const item = doc.data();
         adminMenuList.innerHTML += `
-          <div class="bg-slate-750 p-3 rounded-xl border border-slate-700 flex gap-3 items-center bg-slate-800/60">
+          <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 flex gap-3 items-center">
             <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg bg-slate-600 flex-shrink-0">
             <div class="flex-1 min-w-0">
               <h4 class="font-bold text-white truncate">${item.name}</h4>
@@ -416,11 +421,10 @@
     }
 
     function deleteMenu(id) {
-      if (confirm("ยืนยันการลบเมนูรายการนี้ออกจากระบบอย่างถาวร?")) {
+      if(confirm("ยืนยันการลบเมนูรายการนี้ออกจากระบบอย่างถาวร?")) {
         db.collection("menus").doc(id).delete();
       }
     }
   </script>
 </body>
-
 </html>
