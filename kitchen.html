@@ -6,6 +6,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 </head>
 <body class="bg-slate-900 text-white font-sans p-6">
 
@@ -53,11 +54,15 @@
             <input type="number" id="new-menu-cost" placeholder="4" class="w-full p-2.5 rounded-xl mt-1 focus:outline-none">
           </div>
         </div>
+        
         <div>
-          <label class="text-xs font-semibold text-gray-400">ลิงก์รูปภาพเมนูจากเว็บ/Google Drive (URL)</label>
-          <input type="text" id="new-menu-image" placeholder="วางลิงก์รูปภาพของคุณ..." class="w-full p-2.5 rounded-xl mt-1 focus:outline-none text-xs">
+          <label class="text-xs font-semibold text-gray-400">รูปภาพเมนูสินค้า (เลือกไฟล์หรือเปิดกล้องถ่าย)</label>
+          <input type="file" id="new-menu-image-file" accept="image/*" class="w-full p-2 rounded-xl mt-1 text-xs text-gray-400 bg-slate-700 border border-slate-600 focus:outline-none file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-400">
         </div>
-        <button onclick="addNewMenu()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
+        
+        <div id="upload-status" class="text-xs text-amber-400 font-semibold hidden animate-pulse">⏳ กำลังอัปโหลดรูปภาพเข้าสู่ระบบ...</div>
+
+        <button onclick="addNewMenu()" id="btn-save-menu" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
           💾 บันทึกและเปิดขายทันที
         </button>
       </div>
@@ -85,7 +90,6 @@
           <p class="text-amber-400 font-semibold border-t border-slate-700 pt-1">กำไรสุทธิ:</p><p class="text-right font-black text-green-400 border-t border-slate-700 pt-1">฿<span id="profit-day">0</span></p>
         </div>
       </div>
-
       <div class="bg-slate-800 p-5 rounded-2xl border border-blue-500/20 space-y-3 shadow-md">
         <h3 class="text-lg font-bold text-blue-400 border-b border-slate-700 pb-2 flex justify-between"><span>🗓️ ยอดขายเดือนนี้</span><span class="text-xs text-gray-400 font-normal" id="current-month-lbl">-</span></h3>
         <div class="grid grid-cols-2 gap-2 text-sm pt-1">
@@ -94,7 +98,6 @@
           <p class="text-blue-400 font-semibold border-t border-slate-700 pt-1">กำไรสุทธิ:</p><p class="text-right font-black text-green-400 border-t border-slate-700 pt-1">฿<span id="profit-month">0</span></p>
         </div>
       </div>
-
       <div class="bg-slate-800 p-5 rounded-2xl border border-purple-500/20 space-y-3 shadow-md">
         <h3 class="text-lg font-bold text-purple-400 border-b border-slate-700 pb-2 flex justify-between"><span>🎆 ยอดขายปีนี้</span><span class="text-xs text-gray-400 font-normal" id="current-year-lbl">-</span></h3>
         <div class="grid grid-cols-2 gap-2 text-sm pt-1">
@@ -107,7 +110,6 @@
   </div>
 
   <script>
-    // รวม Firebase Config ของคุณเรียบร้อยแล้ว
     const firebaseConfig = {
       apiKey: "AIzaSyC-slki_yhAJuHbizE4q1CDUz9rV4vHeL4",
       authDomain: "pos-sale-9c1d6.firebaseapp.com",
@@ -120,6 +122,7 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const storage = firebase.storage(); // เปิดใช้งานคลังวัตถุรูปภาพ
 
     function playBeep() {
       try {
@@ -130,7 +133,7 @@
       } catch(e) { console.log("ติดขัดเรื่องสิทธิ์การเล่นเสียงบนบราวเซอร์"); }
     }
 
-    // --- ส่วนงานจัดการคิวอาหาร ---
+    // --- จัดการคิวอาหาร ---
     db.collection("orders").orderBy("timestamp", "asc").onSnapshot((snapshot) => {
       document.getElementById("queue-pending").innerHTML = "";
       document.getElementById("queue-cooking").innerHTML = "";
@@ -166,8 +169,6 @@
         if(order.status === "กำลังทำ") document.getElementById("queue-cooking").innerHTML += cardHtml;
         if(order.status === "เสร็จแล้ว") document.getElementById("queue-ready").innerHTML += cardHtml;
       });
-      
-      // เมื่อไหร่ก็ตามที่มีออเดอร์ถูกอัปเดต ให้คำนวณเงินแดชบอร์ดใหม่ด้วยแบบอัตโนมัติ
       calculateSales();
     });
 
@@ -182,7 +183,7 @@
       db.collection("orders").doc(id).update({ status: newStatus });
     }
 
-    // --- ส่วนงานสลับหน้าแท็บควบคุม ---
+    // --- สลับหน้าแท็บควบคุม ---
     function switchTab(tab) {
       const queueSection = document.getElementById('tab-queue-content');
       const menuSection = document.getElementById('tab-menu-content');
@@ -192,7 +193,6 @@
       const btnMenu = document.getElementById('btn-tab-menu');
       const btnDashboard = document.getElementById('btn-tab-dashboard');
 
-      // ซ่อนทุกอันก่อน
       queueSection.classList.add('hidden');
       menuSection.classList.add('hidden');
       dashboardSection.classList.add('hidden');
@@ -206,14 +206,14 @@
       } else if(tab === 'dashboard') {
         dashboardSection.classList.remove('hidden');
         btnDashboard.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
-        calculateSales(); // โหลดการคำนวณเงินใหม่ตอนเปิดหน้านี้
+        calculateSales();
       } else {
         queueSection.classList.remove('hidden');
         btnQueue.className = "bg-amber-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-md";
       }
     }
 
-    // --- ฟังก์ชันคำนวณรายรับ-รายจ่าย แดชบอร์ด (เรียบร้อยครอบคลุมปี 2026) ---
+    // --- คำนวณรายรับ-รายจ่าย แดชบอร์ด ---
     function calculateSales() {
       db.collection("orders").where("status", "==", "เสร็จสิ้น").get().then((snapshot) => {
         let daySales = 0, dayCost = 0, dayProfit = 0;
@@ -225,14 +225,13 @@
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
 
-        // แสดงข้อความหัวตารางให้สอดคล้องกับเวลาปัจจุบัน
         document.getElementById("current-date-lbl").innerText = now.toLocaleDateString('th-TH', {day:'numeric', month:'short'});
         document.getElementById("current-month-lbl").innerText = now.toLocaleDateString('th-TH', {month:'long'});
-        document.getElementById("current-year-lbl").innerText = currentYear + 543; // แปลงเป็น พ.ศ.
+        document.getElementById("current-year-lbl").innerText = currentYear + 543;
 
         snapshot.forEach((doc) => {
           const order = doc.data();
-          if(!order.timestamp) return; // ข้ามออเดอร์ที่เวลาฝั่งเซิร์ฟเวอร์ยังไม่เสร็จสมบูรณ์
+          if(!order.timestamp) return;
 
           const orderDate = order.timestamp.toDate();
           const oDay = orderDate.getDate();
@@ -243,15 +242,10 @@
           const cost = order.totalCost || 0;
           const profit = order.profit || (price - cost);
 
-          // 1. คำนวณยอดรายปี
           if(oYear === currentYear) {
             yearSales += price; yearCost += cost; yearProfit += profit;
-
-            // 2. คำนวณยอดรายเดือน
             if(oMonth === currentMonth) {
               monthSales += price; monthCost += cost; monthProfit += profit;
-
-              // 3. คำนวณยอดรายวัน
               if(oDay === currentDay) {
                 daySales += price; dayCost += cost; dayProfit += profit;
               }
@@ -259,7 +253,6 @@
           }
         });
 
-        // นำตัวเลขไปแสดงผลบนการ์ดในหน้า Dashboard
         document.getElementById("sales-day").innerText = daySales.toLocaleString();
         document.getElementById("cost-day").innerText = dayCost.toLocaleString();
         document.getElementById("profit-day").innerText = dayProfit.toLocaleString();
@@ -274,30 +267,68 @@
       });
     }
 
-    // --- ส่วนงานจัดการเมนูร้านอาหาร (Admin) ---
-    function addNewMenu() {
+    // --- ปรับปรุงฟังก์ชัน: เพิ่มเมนูใหม่โดยการอัปโหลดไฟล์รูปภาพจริง ---
+    async function addNewMenu() {
       const name = document.getElementById('new-menu-name').value;
       const price = parseFloat(document.getElementById('new-menu-price').value);
       const cost = parseFloat(document.getElementById('new-menu-cost').value);
-      const imageUrl = document.getElementById('new-menu-image').value || "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500"; 
+      const fileInput = document.getElementById('new-menu-image-file');
+      const file = fileInput.files[0];
 
-      if(!name || !price) return alert("กรุณากรอกข้อมูล ชื่อเมนู และ ราคาขาย ให้เรียบร้อยครับ");
+      if (!name || !price) return alert("กรุณากรอกข้อมูล ชื่อเมนู และ ราคาขาย ให้เรียบร้อยครับ");
 
-      db.collection("menus").add({
-        name: name,
-        price: price,
-        cost: cost || 0,
-        image: imageUrl,
-        status: "available"
-      }).then(() => {
-        alert("เพิ่มเมนูลงในฐานข้อมูลระบบสำเร็จ!");
+      const btnSave = document.getElementById('btn-save-menu');
+      const statusLbl = document.getElementById('upload-status');
+      
+      // ปิดปุ่มชั่วคราวและเปิดแจ้งเตือนสถานะการอัปโหลด
+      btnSave.disabled = true;
+      btnSave.innerText = "⏳ ระบบกำลังทำงาน...";
+      statusLbl.classList.remove('hidden');
+
+      let imageUrl = "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500"; // รูปสำรองถ้าไม่ได้เลือกไฟล์
+
+      try {
+        if (file) {
+          // สุ่มชื่อไฟล์ภาพเพื่อไม่ให้ชื่อซ้ำกันในคลัง
+          const fileExtension = file.name.split('.').pop();
+          const fileName = `menu_${Date.now()}.${fileExtension}`;
+          
+          // สั่งอัปโหลดไฟล์ภาพเข้าไปเก็บที่โฟลเดอร์ชื่อ menu-images ใน Firebase Storage
+          const storageRef = storage.ref('menu-images/' + fileName);
+          const uploadTask = await storageRef.put(file);
+          
+          // ดึง URL ลิงก์รูปภาพสาธารณะจากเซิร์ฟเวอร์มาใช้งาน
+          imageUrl = await uploadTask.ref.getDownloadURL();
+        }
+
+        // นำข้อมูลทั้งหมดไปผูกบันทึกใน Firestore Database คอลเลกชัน menus
+        await db.collection("menus").add({
+          name: name,
+          price: price,
+          cost: cost || 0,
+          image: imageUrl,
+          status: "available"
+        });
+
+        alert("เพิ่มเมนูและอัปโหลดรูปภาพสำเร็จเรียบร้อย!");
+        
+        // ล้างข้อมูลช่องกรอกฟอร์มเพื่อเตรียมพร้อมสำหรับเมนูถัดไป
         document.getElementById('new-menu-name').value = "";
         document.getElementById('new-menu-price').value = "";
         document.getElementById('new-menu-cost').value = "";
-        document.getElementById('new-menu-image').value = "";
-      });
+        fileInput.value = ""; // ล้างไฟล์รูปภาพที่เลือกไว้
+
+      } catch (error) {
+        alert("เกิดข้อผิดพลาดในการอัปโหลด: " + error.message);
+      } finally {
+        // เปิดการทำงานของปุ่มบันทึกกลับมาปกติ
+        btnSave.disabled = false;
+        btnSave.innerText = "💾 บันทึกและเปิดขายทันที";
+        statusLbl.classList.add('hidden');
+      }
     }
 
+    // --- ดึงรายการเมนูทั้งหมดของร้านแสดงผล ---
     db.collection("menus").onSnapshot((snapshot) => {
       const adminMenuList = document.getElementById('admin-menu-list');
       adminMenuList.innerHTML = "";
@@ -323,7 +354,7 @@
               <button onclick="toggleMenuStatus('${doc.id}', '${item.status}')" class="text-xs bg-slate-600 hover:bg-slate-500 px-2.5 py-1 rounded text-white font-medium transition-all">
                 ${item.status === 'available' ? 'ปิดขาย' : 'เปิดขาย'}
               </button>
-              <button onclick="deleteMenu('${doc.id}')" class="text-xs bg-red-900/40 hover:bg-red-900/80 px-2.5 py-1 rounded text-red-300 font-medium transition-all">ลบเมนู</button>
+              <button onclick="deleteMenu('${doc.id}', '${item.image}')" class="text-xs bg-red-900/40 hover:bg-red-900/80 px-2.5 py-1 rounded text-red-300 font-medium transition-all">ลบเมนู</button>
             </div>
           </div>
         `;
@@ -335,10 +366,18 @@
       db.collection("menus").doc(id).update({ status: nextStatus });
     }
 
-    // แก้ไขฟังก์ชันการลบเมนูให้ปลอดภัย
-    function deleteMenu(id) {
+    // ปรับปรุงฟังก์ชันลบเมนู ให้ลบไฟล์รูปภาพออกจาก Storage ด้วยเพื่อป้องกันพื้นที่เต็ม
+    function deleteMenu(id, imageUrl) {
       if(confirm("ยืนยันการลบเมนูรายการนี้ออกจากระบบอย่างถาวร?")) {
-        db.collection("menus").doc(id).delete();
+        db.collection("menus").doc(id).delete().then(() => {
+          // ถ้ารูปภาพนั้นถูกอัปโหลดขึ้น Storage ของเราเอง ให้ตามไปลบทิ้งด้วย
+          if(imageUrl && imageUrl.includes("firebasestorage.googleapis.com")) {
+            try {
+              const storageRef = storage.refFromURL(imageUrl);
+              storageRef.delete();
+            } catch(e) { console.log("ลบไฟล์ภาพในคลังไม่สำเร็จ หรือไฟล์ไม่มีอยู่แล้ว"); }
+          }
+        });
       }
     }
   </script>
